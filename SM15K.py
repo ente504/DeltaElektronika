@@ -1003,9 +1003,14 @@ class BasicDataloggerOperation(threading.Thread):
     dataFrameBasic = ['Voltage', 'Current', 'Power']
     fileName = 'BasicDatalogger'
 
-    def __init__(self, IPV4, loggingTime, printColor='green', deamonState=True):
+    def __init__(self, IPV4, mqtt_Broker,mqtt_Port, mqtt_User, mqtt_PW, mqtt_Topic, loggingTime, printColor='green', deamonState=True):
         super().__init__()
         self.IPV4 = IPV4
+        self.mqtt_Broker = mqtt_Broker
+        self.mqtt_Port = matt_Port
+        self.mqtt_User = mqtt_User
+        self.mqtt_PW = mqtt_PW
+        self.mqtt_Topic = mqtt_Topic
         self.printColor = printColor
         self.loggingTime = loggingTime
         self.deamonState = deamonState
@@ -1014,6 +1019,9 @@ class BasicDataloggerOperation(threading.Thread):
         self.finalName = f'{BasicDataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
         open(f'{self.finalName}', "w+").close()
         BasicDataloggerOperation.dataFrameBasic.insert(0, 'Timestamp')
+        self.mqtt_client = mqtt.Client(DeltaElectronica_SM15k_PowerSupply)
+        self.mqtt_client.username_pw_set(username=self.mqtt_User,password=self.mqtt_PW)
+        self.mqtt_client.connect(mqtt_Broker,port=self.mqtt_Port)
 
     def __str__(self):
         return f'Basic Datalogger Operation, for details print object.__doc__'
@@ -1025,6 +1033,9 @@ class BasicDataloggerOperation(threading.Thread):
         csvFile.close()
         BasicDataloggerOperation.dataFrameBasic[0] = time.strftime('%d-%m-%Y %H:%M:%S')
         return BasicDataloggerOperation.dataFrameBasic
+
+    def mqtt_publish(self):
+        self.mqtt_client.publish(topic,BasicDataloggerOperation.dataFrameBasic)
 
     def updateBasicDataFrame(self):
         BasicDataloggerOperation.dataFrameBasic[1] = MeasureSubsystem(self.IPV4).MeasureVoltage()
@@ -1047,6 +1058,7 @@ class BasicDataloggerOperation(threading.Thread):
         while not self._stop_event.is_set():
             logger.debug('Datalogger thread class for basic dataframe is running!')
             self.csvLogger()
+            self.mqtt_client.publish(self.mqtt_Topic, BasicDataloggerOperation.dataFrameBasic)
             self.updateBasicDataFrame()
             time.sleep(self.loggingTime)
         logger.debug('Datalogger thread class has been stopped!')
