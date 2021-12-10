@@ -1019,8 +1019,9 @@ class BasicDataloggerOperation(threading.Thread):
         self.finalName = f'{BasicDataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
         open(f'{self.finalName}', "w+").close()
         BasicDataloggerOperation.dataFrameBasic.insert(0, 'Timestamp')
-        self.mqtt_client = mqtt.Client(DeltaElectronica_SM15k_PowerSupply)
-        self.mqtt_client.username_pw_set(username=self.mqtt_User,password=self.mqtt_PW)
+        #setup of mqtt client
+        self.mqtt_client = mqtt.Client("DeltaElectronica_SM15k_PowerSupply")
+        self.mqtt_client.username_pw_set(self.mqtt_User,self.mqtt_PW)
         self.mqtt_client.connect(mqtt_Broker,self.mqtt_Port)
 
     def __str__(self):
@@ -1034,9 +1035,6 @@ class BasicDataloggerOperation(threading.Thread):
         BasicDataloggerOperation.dataFrameBasic[0] = time.strftime('%d-%m-%Y %H:%M:%S')
         return BasicDataloggerOperation.dataFrameBasic
 
-    def mqtt_publish(self):
-        self.mqtt_client.publish(self.mqtt_Topic,str(BasicDataloggerOperation.dataFrameBasic))
-
     def updateBasicDataFrame(self):
         BasicDataloggerOperation.dataFrameBasic[1] = MeasureSubsystem(self.IPV4).MeasureVoltage()
         BasicDataloggerOperation.dataFrameBasic[2] = MeasureSubsystem(self.IPV4).MeasureCurrent()
@@ -1047,6 +1045,15 @@ class BasicDataloggerOperation(threading.Thread):
         cprint.printColorful(
             f'Voltage: {BasicDataloggerOperation.dataFrameBasic[1]}V, Current: {BasicDataloggerOperation.dataFrameBasic[2]}A, '
             f'Power: {BasicDataloggerOperation.dataFrameBasic[3]}W', self.printColor)
+
+        #publish dataFrame on corresponding mqtt Topic
+        Topic = self.mqtt_Topic + "/Voltage"
+        self.mqtt_client.publish[Topic, str(BasicDataloggerOperation.dataFrameBasic[1])]
+        Topic = self.mqtt_Topic + "/Current"
+        self.mqtt_client.publish[Topic, str(BasicDataloggerOperation.dataFrameBasic[2])]
+        Topic = self.mqtt_Topic + "/Power"
+        self.mqtt_client.publish[Topic, str(BasicDataloggerOperation.dataFrameBasic[3])]
+
         return BasicDataloggerOperation.dataFrameBasic
 
     def stop(self):
