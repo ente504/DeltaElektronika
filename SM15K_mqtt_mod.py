@@ -1001,9 +1001,9 @@ class BasicDataloggerOperation(threading.Thread):
         -----------------------------------------------------------------------------------------------------------------
     """
     dataFrameBasic = ['Voltage', 'Current', 'Power']
-    fileName = 'BasicDatalogger'
+    fileName = "BasicDataLogger"
 
-    def __init__(self, IPV4, mqtt_Broker,mqtt_Port, mqtt_User, mqtt_PW, mqtt_Topic, loggingTime, printColor='green', deamonState=True):
+    def __init__(self, IPV4, mqtt_Broker,mqtt_Port, mqtt_User, mqtt_PW, mqtt_Topic, remote_storage_location, loggingTime, printColor='green', deamonState=True):
         super().__init__()
         self.IPV4 = IPV4
         self.mqtt_Broker = mqtt_Broker
@@ -1016,7 +1016,8 @@ class BasicDataloggerOperation(threading.Thread):
         self.deamonState = deamonState
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
-        self.finalName = f'{BasicDataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
+        BasicDataloggerOperation.fileName = remote_storage_location
+        self.finalName = f'{BasicDataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.csv'
         open(f'{self.finalName}', "w+").close()
         BasicDataloggerOperation.dataFrameBasic.insert(0, 'Timestamp')
         #setup of mqtt client
