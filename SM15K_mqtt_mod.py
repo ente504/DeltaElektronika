@@ -1065,10 +1065,15 @@ class BasicDataloggerOperation(threading.Thread):
     def run(self):
         logger.debug('Datalogger thread class has been started!')
         while not self._stop_event.is_set():
-            logger.debug('Datalogger thread class for basic dataframe is running!')
-            self.csvLogger()
-            self.updateBasicDataFrame()
-            time.sleep(self.loggingTime)
+            try:
+                logger.debug('Datalogger thread class for basic dataframe is running!')
+                self.csvLogger()
+                self.updateBasicDataFrame()
+                time.sleep(self.loggingTime)
+            except:
+                print("ERROR in Basicdatalogger.run()")
+                logger.debug('Error running the Datalogger Loop')
+
         logger.debug('Datalogger thread class has been stopped!')
 
 
